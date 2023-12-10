@@ -1,0 +1,39 @@
+trigger: none
+pr: none
+
+resources:
+  containers:
+    - container: awscli
+      image: packagerepository.sagaws.net:8082/safelite/awscli2-build:3.9
+  repositories:
+    - repository: AzureDevOps
+      type: github
+      name: Safelite/AzureDevOps
+      endpoint: Safelite
+      ref: refs/tags/t5.3.4
+
+parameters:
+  - name: CloudformationStackName
+    displayName: Cloudformation Stack Name
+    type: string
+  - name: awsRegion
+    displayName: AWS Region
+    type: string
+    default: us-east-2
+
+variables:
+  - group: BelronUs-Infrastructure
+
+stages:
+  - stage: deleteCloudformationQa
+    displayName: Delete Cloudformation stack, Qa.
+    jobs:
+      - deployment: deleteCloudformationStack
+        environment: belronusCloud-qa
+        displayName: Delete Cloudformation stack.
+        container: awscli
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - bash: aws cloudformation delete-stack --stack-name ${{ parameters.CloudformationStackName }} --region ${{ parameters.awsRegion }} --profile $(qaDeploymentProfile)
